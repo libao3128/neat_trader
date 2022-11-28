@@ -35,10 +35,17 @@ class evaluate:
     
     def __init__(self, backtesting_data):
         self.backtesting_data = backtesting_data
+        if backtesting_data is None:
+            self.random_generate = True
+        else:
+            self.random_generate = False
+        self.cnt = 0
         
 
     def eval_genome(self, genome, config):
         #print(genome)
+        self.cnt += 1
+        print(self.cnt)
         #global backtesting_data
         net = neat.nn.FeedForwardNetwork.create(genome, config)
         if self.backtesting_data is None:
@@ -97,7 +104,7 @@ class evaluate:
 
 def run(config_file, evaluate, max_generation = 200):
     os.environ["PATH"] += os.pathsep + r'C:/Users/USER/OneDrive - 國立陽明交通大學/文件/academic/大四上/演化計算/Project/Graphviz/bin'
-    
+    shutil.copyfile(config_file, 'checkpoint/'+time_str+'/winner/config-feedforward')
 
     t = time.localtime()
     time_str = time.strftime("%m%d_%H%M", t)
@@ -129,11 +136,7 @@ def run(config_file, evaluate, max_generation = 200):
 
     # Show output of the most fit genome against training data.
     print('\nOutput:')
-    winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
-
-    performance, bt = backtest(winner_net, evaluate.backtesting_data)
-    print(performance)
-    bt.plot(plot_width=1500)
+    
 
 
     node_names = {
@@ -162,11 +165,11 @@ def run(config_file, evaluate, max_generation = 200):
     with open(folder+'winner/nodes_name.pkl', 'wb') as handle:
         pickle.dump(node_names, handle, protocol=pickle.HIGHEST_PROTOCOL)
     #pickle.dump(node_names)
-        
-    shutil.copyfile(config_file, 'checkpoint/'+time_str+'/winner/config-feedforward')
+    test(folder+'winner/')
+    
 
 
-def test( file_name):
+def test( file_name, backtesting_data=None):
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
                          file_name+'config-feedforward')
@@ -175,18 +178,23 @@ def test( file_name):
     with open(file_name+'nodes_name.pkl', 'rb') as f:
         node_names = pickle.load(f)
     #winner = p.run(eval_genomes, 1)
-
+    if backtesting_data is None:
+        backtesting_data=evaluate.generate_random_data(None)
     net = neat.nn.FeedForwardNetwork.create(winner, config)
     performance, bt = backtest(net, backtesting_data)
     print(performance)
-    bt.plot(plot_width=1500)
+    bt.plot(plot_width=1500, filename=file_name+'/Performance_{}.html'.format(backtesting_data['Ticker'][0]))
 
 if __name__ == '__main__':
+    from tool import run, test, evaluate
+    #eval = evaluate(None)
+    #run('config-feedforward', eval, max_generation=200)
     #backtesting.set_bokeh_output(notebook=False)
     #backtesting_data = yf.download('AAPL', interval='15m', period='60d')
     #backtesting_data.index = pd.to_datetime(backtesting_data.index)
 
-    evaluate(None).generate_random_data()
-    
+    #evaluate(None).generate_random_data()
+    test('checkpoint/1129_0032\winner/')
     #run('config-feedforward', 5)
     #test('checkpoint/1128_1507\winner/' )
+    pass
