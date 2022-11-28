@@ -6,6 +6,7 @@ from talib.abstract import MACD
 from talib import SMA, EMA, WMA, RSI, MOM, CCI, WILLR, AD
 import pandas as pd
 
+
 class NEAT_strategy(Strategy): #交易策略命名為SmaClass，使用backtesting.py的Strategy功能
     n1 = 5
     n2 = 12
@@ -13,6 +14,7 @@ class NEAT_strategy(Strategy): #交易策略命名為SmaClass，使用backtestin
 
     model = None
     threshold = 0.5
+    
 
     def init(self):
     
@@ -48,14 +50,18 @@ class NEAT_strategy(Strategy): #交易策略命名為SmaClass，使用backtestin
         
         return (position ,slowk[-1], slowd[-1], macdhist[-1])
 
-def backtest(model, data):
+def backtest(model, data=None):
     new_strategy = NEAT_strategy
     new_strategy.model = model
+    
+
     bt = Backtest(data, new_strategy,
                   cash=10000, commission=.002,
                   exclusive_orders=True)
     output = bt.run()
     return output, bt
+
+
 
 class SmaCross(Strategy):
     n1 = 10

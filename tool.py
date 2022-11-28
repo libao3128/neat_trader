@@ -8,6 +8,11 @@ from backtest import NEAT_strategy, backtest
 import pickle
 import shutil
 import time
+import sqlite3
+import numpy as np
+import random
+import datetime
+import io
 
 import yfinance as yf
 
@@ -30,15 +35,65 @@ class evaluate:
     
     def __init__(self, backtesting_data):
         self.backtesting_data = backtesting_data
+        
 
     def eval_genome(self, genome, config):
         #print(genome)
         #global backtesting_data
         net = neat.nn.FeedForwardNetwork.create(genome, config)
-        performance, _ = backtest(net, self.backtesting_data)
+        if self.backtesting_data is None:
+            performance, _ = backtest(net, self.generate_random_data())
+        else:
+            performance, _ = backtest(net, self.backtesting_data)
         #genome.fitness = fitness_fn(performance)
         return fitness_fn(performance)
         #self.stop()
+
+    def generate_random_data(self):
+        con = sqlite3.connect('mydatabase.db')
+        tickers = pd.read_sql('SELECT DISTINCT Ticker FROM Price', con)
+
+        ticker = np.random.choice(tickers['Ticker'].tolist())
+        dates = pd.read_sql('SELECT Datetime FROM Price WHERE Ticker="'+ticker+'"', con)
+        dates = pd.to_datetime(dates['Datetime'])
+        start_date = dates.max()
+        end_date = dates.min()
+
+        #
+        time_between_dates = start_date-end_date
+        try:
+            days_between_dates = int(time_between_dates.days-365*2.5)
+            random_number_of_days = random.randrange(days_between_dates)
+        except:
+            return self.generate_random_data()
+    
+            
+        
+        random_date = end_date + datetime.timedelta(days=random_number_of_days)
+
+        start_date = random_date
+        end_date = start_date + datetime.timedelta(days=int(365*1.5))
+
+        data =  pd.read_sql(
+            'SELECT * FROM Price WHERE Ticker="'+ticker+'"'
+            +' AND Datetime>=DATETIME('+str(start_date.timestamp())+', "unixepoch")'
+            +' AND Datetime<=DATETIME('+str(end_date.timestamp())+', "unixepoch")'
+            , con)
+
+        con.close()
+        return data
+
+    def read_sql_inmem_uncompressed(self, query, conn):
+        copy_sql = "COPY ({query}) TO STDOUT WITH CSV {head}".format(
+           query=query, head="HEADER"
+        )
+        
+        cur = conn.cursor()
+        store = io.StringIO()
+        cur.copy_expert(copy_sql, store)
+        store.seek(0)
+        df = pd.read_csv(store)
+        return df
 
 def run(config_file, evaluate, max_generation = 200):
     os.environ["PATH"] += os.pathsep + r'C:/Users/USER/OneDrive - 國立陽明交通大學/文件/academic/大四上/演化計算/Project/Graphviz/bin'
@@ -127,9 +182,11 @@ def test( file_name):
     bt.plot(plot_width=1500)
 
 if __name__ == '__main__':
-    backtesting.set_bokeh_output(notebook=False)
-    backtesting_data = yf.download('AAPL', interval='15m', period='60d')
-    backtesting_data.index = pd.to_datetime(backtesting_data.index)
+    #backtesting.set_bokeh_output(notebook=False)
+    #backtesting_data = yf.download('AAPL', interval='15m', period='60d')
+    #backtesting_data.index = pd.to_datetime(backtesting_data.index)
+
+    evaluate(None).generate_random_data()
     
-    run('config-feedforward', 5)
+    #run('config-feedforward', 5)
     #test('checkpoint/1128_1507\winner/' )

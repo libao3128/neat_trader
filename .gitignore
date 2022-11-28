@@ -3,3 +3,4 @@ data/
 Graphviz/
 NEAT_strategy.html
 *.gv
+*.db
