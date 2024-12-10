@@ -4,7 +4,7 @@
 fitness_criterion = max
 fitness_threshold = 0
 no_fitness_termination = True
-pop_size              = 40
+pop_size              = 2
 reset_on_extinction   = False
 
 [DefaultGenome]
@@ -33,23 +33,23 @@ compatibility_weight_coefficient   = 0.5
 
 # connection add/remove rates
 conn_add_prob           = 0.5
-conn_delete_prob        = 0.5
+conn_delete_prob        = 0.45
 
 # connection enable options
 enabled_default         = True
 enabled_mutate_rate     = 0.01
 
-feed_forward            = True
+feed_forward            = False
 initial_connection      = full
 
 # node add/remove rates
 node_add_prob           = 0.5
-node_delete_prob        = 0.4
+node_delete_prob        = 0.45
 
 # network parameters
 num_hidden              = 0
-num_inputs              = 4
-num_outputs             = 2
+num_inputs              = 11
+num_outputs             = 3
 
 # node response options
 response_init_mean      = 1.0
@@ -73,9 +73,9 @@ weight_replace_rate     = 0.1
 compatibility_threshold = 3.0
 
 [DefaultStagnation]
-species_fitness_func = max
-max_stagnation       = 10
-species_elitism      = 2
+species_fitness_func = median
+max_stagnation       = 100
+species_elitism      = 4
 
 [DefaultReproduction]
 elitism            = 2

@@ -3,6 +3,7 @@ import warnings
 import graphviz
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 
 def plot_stats(statistics, ylog=False, view=False, filename='avg_fitness.svg'):
@@ -112,6 +113,7 @@ def plot_species(statistics, view=False, filename='speciation.svg'):
 
 def draw_net(config, genome, view=False, filename=None, node_names=None, show_disabled=True, prune_unused=False,
              node_colors=None, fmt='svg'):
+    os.environ["PATH"] += os.pathsep + r'C:/Users/USER/OneDrive - 國立陽明交通大學/文件/academic/大四上/演化計算/Project/Graphviz/bin'
     """ Receives a genome and draws a neural network with arbitrary topology. """
     # Attributes for network nodes.
     if graphviz is None:
