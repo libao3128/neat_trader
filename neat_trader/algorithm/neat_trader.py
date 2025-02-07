@@ -39,8 +39,8 @@ class NeatTrader:
     node_names():
         Returns a dictionary mapping node IDs to their names.
     """
-    def __init__(self, config_path, evaluator):
-        self.config = self._load_configuration(config_path)
+    def __init__(self, config, evaluator):
+        self.config = config
         self.evaluator = evaluator
         
         self.checkpoint_path = self._initialize_folder_structure()
