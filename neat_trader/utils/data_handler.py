@@ -5,6 +5,17 @@ import random
 import datetime
 
 class DataHandler:
+    '''
+    DataHandler class for handling stock price data from a SQLite database.
+    Attributes:
+        db_path (str): Path to the SQLite database file.
+    Methods:
+        __init__(db_path='data/mydatabase.db'):
+            Initializes the DataHandler with the specified database path.
+        _connect():
+            Establishes a connection to the SQLite database.
+        get_random_data(is_test=False, num_date=365):
+    '''
     def __init__(self, db_path='data/mydatabase.db'):
         self.db_path = db_path
 
