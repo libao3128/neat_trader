@@ -5,38 +5,21 @@ import time
 from multiprocessing import Pool
 
 import neat
+from neat.nn.feed_forward import FeedForwardNetwork
 import pandas as pd
 from tqdm import tqdm
 
 from neat_trader.utils import visualize
-from neat_trader.utils.backtest import backtest
+from neat_trader.utils.backtest import backtest, multi_process_backtest
 from neat_trader.algorithm.evaluate import Evaluater
 from neat_trader.utils.data_handler import DataHandler
+from neat_trader.neat.tools import load_configuration, initialize_population, add_reporters
 
 def create_folder_structure(time_str):
     folder = f'checkpoint/{time_str}/'
     if not os.path.exists(f'{folder}winner'):
         os.makedirs(f'{folder}winner')
     return folder
-
-def load_configuration(config_file_path):
-    return neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
-                       neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                       config_file_path)
-
-def initialize_population(config, checkpoint_path):
-    if checkpoint_path is None:
-        return neat.Population(config)
-    return neat.Checkpointer.restore_checkpoint(checkpoint_path)
-
-def add_reporters(population, folder):
-    population.add_reporter(neat.StdOutReporter(True))
-    stats = neat.StatisticsReporter()
-    population.add_reporter(stats)
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-    population.add_reporter(neat.Checkpointer(5, filename_prefix=f'{folder}neat-checkpoint-'))
-    return stats
 
 def run_experiment(config, evaluater, max_generation=200, num_date=90, num_process=16, checkpoint_path=None):
     time_str = time.strftime("%m%d_%H%M", time.localtime())
@@ -75,9 +58,8 @@ def run_experiment(config, evaluater, max_generation=200, num_date=90, num_proce
 
     return population, winner, stats
 
-def test_population(population, config_file_path, evaluater, episode=10, date_length=90):
-    config = load_configuration(config_file_path)
-    nets = [neat.nn.RecurrentNetwork.create(individual, config) for individual in population.population.values()]
+def test_population(population, config, evaluater, episode=10, date_length=90):
+    nets = [FeedForwardNetwork.create(individual, config) for individual in population.population.values()]
     performances = pd.DataFrame(columns=['individual_index', 'test_case', 'performance', 'bt'])
     backtesting_data = []
 
@@ -94,6 +76,7 @@ def test_population(population, config_file_path, evaluater, episode=10, date_le
         backtesting_data.append(data)
 
     return performances, backtesting_data
+
 
 if __name__ == '__main__':
     performances = test_population('VERY_GOOD', 1979, 20, 365)

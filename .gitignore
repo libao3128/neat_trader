@@ -6,3 +6,5 @@ NEAT_strategy.html
 *.db
 documents/
 *.pyc
+Digraph.gv.svg
+NEATStrategy.html

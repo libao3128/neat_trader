@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from multiprocessing import Pool
 from typing import List, Tuple
+from tqdm import tqdm
 
 class NEATStrategy(Strategy):
     n1 = 5
@@ -92,15 +93,17 @@ def multi_process_backtest(models, data, num_processes=None) -> Tuple[List[pd.Da
         models = [models]*len(data)
     if not isinstance(data, list):
         data = [data]*len(models)
-        
+    
+    args = [(model, d) for model, d in zip(models, data)]
+    
     with Pool(processes=num_processes) as pool:
-        args = [(model, d) for model, d in zip(models, data)]
-        results = pool.map(test_single_net, args)
+        results = list(tqdm(pool.imap(test_single_net, args), total=len(args)))
     return zip(*results)
 
 if __name__ == '__main__':
     import yfinance as yf
     from neat_trader.utils.tool import test
+
 
     df = yf.download('AAPL', interval='1d', period='360d')
     df.index = pd.to_datetime(df.index)
