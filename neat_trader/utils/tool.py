@@ -1,8 +1,6 @@
 import os
 import pickle
-import shutil
 import time
-from multiprocessing import Pool
 
 import neat
 from neat.nn.feed_forward import FeedForwardNetwork
@@ -10,10 +8,8 @@ import pandas as pd
 from tqdm import tqdm
 
 from neat_trader.utils import visualize
-from neat_trader.utils.backtest import backtest, multi_process_backtest
-from neat_trader.algorithm.evaluate import Evaluater
-from neat_trader.utils.data_handler import DataHandler
-from neat_trader.neat.tools import load_configuration, initialize_population, add_reporters
+from neat_trader.utils.backtest import multi_process_backtest
+from neat_trader.neat.tools import initialize_population, add_reporters
 
 def create_folder_structure(time_str):
     folder = f'checkpoint/{time_str}/'
@@ -22,6 +18,20 @@ def create_folder_structure(time_str):
     return folder
 
 def run_experiment(config, evaluater, max_generation=200, num_date=90, num_process=16, checkpoint_path=None):
+    """
+    Runs the NEAT algorithm experiment.
+
+    Args:
+        config (neat.Config): The NEAT configuration object.
+        evaluater (Evaluater): The evaluater object used to evaluate genomes.
+        max_generation (int, optional): The maximum number of generations to run. Defaults to 200.
+        num_date (int, optional): The number of dates to use for backtesting data. Defaults to 90.
+        num_process (int, optional): The number of processes to use for parallel evaluation. Defaults to 16.
+        checkpoint_path (str, optional): The path to a checkpoint file to resume from. Defaults to None.
+
+    Returns:
+        tuple: A tuple containing the population, the winning genome, and the statistics reporter.
+    """
     time_str = time.strftime("%m%d_%H%M", time.localtime())
     folder = create_folder_structure(time_str)
     config.save(f'{folder}winner/config-feedforward')
@@ -59,6 +69,19 @@ def run_experiment(config, evaluater, max_generation=200, num_date=90, num_proce
     return population, winner, stats
 
 def test_population(population, config, evaluater, episode=10, date_length=90):
+    """
+    Tests the population by running multiple backtesting episodes.
+
+    Args:
+        population (neat.Population): The NEAT population object.
+        config (neat.Config): The NEAT configuration object.
+        evaluater (Evaluater): The evaluater object used to evaluate genomes.
+        episode (int, optional): The number of backtesting episodes to run. Defaults to 10.
+        date_length (int, optional): The number of dates to use for backtesting data. Defaults to 90.
+
+    Returns:
+        tuple: A tuple containing the performances DataFrame and the backtesting data.
+    """
     nets = [FeedForwardNetwork.create(individual, config) for individual in population.population.values()]
     performances = pd.DataFrame(columns=['individual_index', 'test_case', 'performance', 'bt'])
     backtesting_data = []
@@ -72,7 +95,7 @@ def test_population(population, config, evaluater, episode=10, date_length=90):
             'performance': performance,
             'bt': bts
         })
-        performances = pd.concat([performances, performance_df])
+        performances = pd.concat([performances, performance_df], ignore_index=True)
         backtesting_data.append(data)
 
     return performances, backtesting_data

@@ -12,6 +12,16 @@ class DataHandler:
         return sqlite3.connect(self.db_path)
 
     def get_random_data(self, is_test=False, num_date=365):
+        """
+        Fetches random stock price data for a given number of days.
+
+        Args:
+            is_test (bool, optional): If True, fetches data for the entire date range of the ticker. Defaults to False.
+            num_date (int, optional): Number of days of data to fetch. Defaults to 365.
+
+        Returns:
+            pd.DataFrame: DataFrame containing the stock price data.
+        """
         con = self._connect()
         tickers = pd.read_sql('SELECT DISTINCT Ticker FROM Price', con)
 
@@ -44,17 +54,3 @@ class DataHandler:
         data.index = pd.DatetimeIndex(data['Datetime'])
         con.close()
         return data
-    
-def get_price(period, interval):
-    file_name = 'data/price_sp500_'+interval+'_'+period+'.xlsx'
-    if os.path.exists(file_name):
-        price = pd.read_excel(file_name)
-    else:
-        sp500 = pd.read_excel('data/sp500.xlsx', header=2, index_col=0)
-        price = yf.download(list(sp500['Symbol']), period=period, interval=interval)
-        price.to_excel(file_name)
-    return price
-
-if __name__ == '__main__':
-    price = get_price(period='20y', interval='1d')
-    

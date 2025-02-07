@@ -28,54 +28,64 @@ class NEATStrategy(Strategy):
                             np.array(self.data.Volume, dtype=float), name='ADOSC')
 
     def next(self):
+        # Preprocess the data to get the input features for the model
         input_data = self.data_preprocessed()
+        
+        # Activate the model with the preprocessed data to get buy, sell signals and volume
         buy, sell, vol = self.model.activate(input_data)
+        
+        # Determine the action to take based on the buy and sell signals
         action = None
-        if buy > self.threshold:
-            action = 0
-        if sell > self.threshold:
-            action = 1
-        if sell > self.threshold and buy > self.threshold:
-            action = np.argmax([buy, sell])
+        if buy > self.threshold and sell > self.threshold:
+            action = np.argmax([buy, sell])  # Choose the stronger signal
+        elif buy > self.threshold:
+            action = 0  # Buy signal
+        elif sell > self.threshold:
+            action = 1  # Sell signal
 
+        # Calculate the volume to trade based on the equity and current price
         vol = int(self.equity * vol / self.data.df.Close.iloc[-1])
 
-        if action == 0 and vol != 0:
+        # Execute the trade based on the determined action
+        if action == 0 and vol > 0:
             self.buy(size=vol)
-        elif action == 1 and vol != 0:
+        elif action == 1 and vol > 0:
             self.sell(size=vol)
 
     def data_preprocessed(self):
-        high, low, close = self.data.df.High, self.data.df.Low, self.data.df.Close
-        price = close.iloc[-1]
-        length = len(self.data.df.High)
-        slowk, slowd = tuple(self.kd[:length])
-        macd, macdsignal, macdhist = tuple(self.macd[:length])
-        macdhist_diff = (macdhist[-1] - macdhist[-2]) / price
-        cci = self.cci[:length]
-        willr = self.willr[:length]
-        rsi = self.rsi[:length]
-        adosc = self.adosc[:length]
-        sma5 = self.sma5[:length]
-        price_sma5 = price / sma5 - 1
-        sma10 = self.sma10[:length]
-        price_sma10 = price / sma10 - 1
+        data = self.data.df
+        price = data.Close.iloc[-1]
+        length = len(data)
+        
+        indicators = {
+            'slowk': self.kd[0][:length],
+            'slowd': self.kd[1][:length],
+            'macdhist_diff': (self.macd[2][:length][-1] - self.macd[2][:length][-2]) / price,
+            'cci': self.cci[:length],
+            'willr': self.willr[:length],
+            'rsi': self.rsi[:length],
+            'adosc': self.adosc[:length],
+            'price_sma5': price / self.sma5[:length] - 1,
+            'price_sma10': price / self.sma10[:length] - 1
+        }
+        
         long_position, short_position = 0, 0
         if self.position:
+            position_size = self.position.size * price / self.equity
             if self.position.is_long:
-                long_position = self.position.size * price / self.equity
+                long_position = position_size
             else:
-                short_position = abs(self.position.size * price / self.equity)
+                short_position = abs(position_size)
 
         return (
             long_position, short_position,
-            price_sma5[-1], price_sma10[-1],
-            slowk[-1], slowd[-1],
-            macdhist_diff,
-            cci[-1],
-            willr[-1],
-            rsi[-1],
-            adosc[-1]
+            indicators['price_sma5'][-1], indicators['price_sma10'][-1],
+            indicators['slowk'][-1], indicators['slowd'][-1],
+            indicators['macdhist_diff'],
+            indicators['cci'][-1],
+            indicators['willr'][-1],
+            indicators['rsi'][-1],
+            indicators['adosc'][-1]
         )
 
 def backtest(model, data):
