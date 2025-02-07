@@ -3,7 +3,6 @@ from neat_trader.utils.backtest import backtest
 from neat_trader.utils.data_handler import DataHandler
 
 import neat
-import pandas as pd
 
 class Evaluator:
     """
@@ -36,6 +35,8 @@ class Evaluator:
 
     def eval_genome(self, genome, config):
         net = neat.nn.FeedForwardNetwork.create(genome, config)
-        data = self.backtesting_data or self.data_handler.get_random_data()
-        performance, _ = backtest(net, data)
-        return self.fitness_fn(performance)
+        if self.backtesting_data is None:
+            self.backtesting_data = self.data_handler.get_random_data()
+        performance, _ = backtest(net, self.backtesting_data)
+        score = self.fitness_fn(performance)
+        return score

@@ -107,7 +107,7 @@ def multi_process_backtest(models, data, num_processes=None) -> Tuple[List[pd.Da
     args = [(model, d) for model, d in zip(models, data)]
     
     with Pool(processes=num_processes) as pool:
-        results = list(tqdm(pool.imap(test_single_net, args), total=len(args)))
+        results = list(pool.imap(test_single_net, args))
     return zip(*results)
 
 if __name__ == '__main__':
