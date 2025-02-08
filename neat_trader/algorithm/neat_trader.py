@@ -84,7 +84,7 @@ class NeatTrader:
 
         if num_process > 1:
             for _ in range(int(total_generation / 5)):
-                self.evaluator.backtesting_data = self.evaluator.data_handler.get_random_data(num_date=trading_period_length)
+                self.evaluator.backtesting_data = self.evaluator.data_handler.get_random_data(data_length=trading_period_length)
                 pe = ParallelEvaluator(num_process, self.evaluator.eval_genome)
                 winner = self.population.run(pe.evaluate, 5)
         else:

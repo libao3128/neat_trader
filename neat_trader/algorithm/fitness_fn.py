@@ -113,4 +113,6 @@ def gpt_fitness_fn(performance: pd.DataFrame):
     trade_freq = performance['# Trades']
     trade_freq_score = trade_freq_function(trade_freq, t_target)
     
-    return (sharpe_ratio*annualized_return)/(1+max_drawdown)*trade_freq_score * 100
+    score = (sharpe_ratio*annualized_return)/(1+max_drawdown)*trade_freq_score * 100
+    print(performance, score)
+    return score

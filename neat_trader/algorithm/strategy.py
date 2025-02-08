@@ -1,12 +1,8 @@
 from backtesting import Backtest, Strategy
 from talib.abstract import STOCH as KD, MACD, CCI, SMA, WILLR, RSI, ADOSC
-import pandas as pd
 import numpy as np
-from multiprocessing import Pool
-from typing import List, Tuple
-from tqdm import tqdm
 
-class NEATStrategy(Strategy):
+class NEATStrategyBase(Strategy):
     n1 = 5
     n2 = 12
     n3 = 26
@@ -87,37 +83,3 @@ class NEATStrategy(Strategy):
             indicators['rsi'][-1],
             indicators['adosc'][-1]
         )
-
-def backtest(model, data):
-    NEATStrategy.model = model
-    bt = Backtest(data, NEATStrategy, cash=1000000, commission=.002, exclusive_orders=False)
-    output = bt.run()
-    return output, bt
-
-def test_single_net(args):
-    model, data = args
-    return backtest(model, data)
-
-def multi_process_backtest(models, data, num_processes=None) -> Tuple[List[pd.DataFrame], List[Backtest]]:
-    if not isinstance(models, list):
-        models = [models]*len(data)
-    if not isinstance(data, list):
-        data = [data]*len(models)
-    
-    args = [(model, d) for model, d in zip(models, data)]
-    
-    with Pool(processes=num_processes) as pool:
-        results = list(pool.imap(test_single_net, args))
-    return zip(*results)
-
-if __name__ == '__main__':
-    import yfinance as yf
-    from neat_trader.utils.tool import test
-
-
-    df = yf.download('AAPL', interval='1d', period='360d')
-    df.index = pd.to_datetime(df.index)
-    df['Ticker'] = 'AAPL'
-
-    performance, bt = test(r'checkpoint\1210_1827\winner/')
-    print(performance._trades)
