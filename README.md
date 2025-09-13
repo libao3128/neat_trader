@@ -93,7 +93,7 @@ trader.generate_report()
 ```
 
 ### Advanced Usage
-See [neat_trading_strategy_development.ipynb] for more example.
+See [example](neat_trading_strategy_development.ipynb) for more example.
 
 ## 📁 Project Structure
 
