@@ -8,3 +8,5 @@ documents/
 *.pyc
 Digraph.gv.svg
 NEATStrategy.html
+__pycache__/
+local_files/
