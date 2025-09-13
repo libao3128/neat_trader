@@ -65,6 +65,9 @@ The system integrates multiple technical indicators as neural network inputs:
 git clone https://github.com/libao3128/NEAT-Algorithm-based-Stock-Trading-Strategy.git
 cd NEAT-Algorithm-based-Stock-Trading-Strategy
 
+# Initialize submodules (for S&P 500 company list)
+git submodule update --init --recursive
+
 # Install dependencies
 pip install -r requirements.txt
 ```
@@ -112,6 +115,9 @@ NEAT-Algorithm-based-Stock-Trading-Strategy/
 │   └── utils/                  # Utility modules
 │       ├── data_handler.py     # Data handling utilities
 │       └── visualize.py        # Visualization functions
+├── s-and-p-500-companies/      # S&P 500 company list (git submodule)
+│   └── data/
+│       └── constituents.csv    # S&P 500 company symbols and data
 ├── model/                      # NEAT configuration files
 │   ├── config-feedforward      # Main configuration
 │   └── config-test            # Test configuration
@@ -185,6 +191,24 @@ def custom_fitness(performance: pd.DataFrame) -> float:
 ```
 
 ## 📊 Data Handling
+
+### S&P 500 Company List
+
+This project uses the [s-and-p-500-companies](https://github.com/datasets/s-and-p-500-companies) dataset as a git submodule to provide an up-to-date list of S&P 500 companies. The dataset includes:
+
+- **Company Constituents**: Complete list of S&P 500 companies with their symbols
+- **Data Source**: Maintained by the Open Knowledge Foundation
+- **Update Frequency**: Regularly updated to reflect index changes
+
+To initialize the submodule after cloning:
+
+```bash
+# Initialize and update submodules
+git submodule update --init --recursive
+
+# The S&P 500 company list will be available at:
+# s-and-p-500-companies/data/constituents.csv
+```
 
 ### Stock Data (SQLite)
 
