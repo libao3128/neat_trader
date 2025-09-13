@@ -1,16 +1,49 @@
+"""
+Trading strategy implementation for NEAT Trader package.
+
+This module contains the base trading strategy class that integrates with NEAT
+neural networks for automated trading decisions.
+"""
+
+from typing import Tuple, Optional, Any
+import numpy as np
 from backtesting import Backtest, Strategy
 from talib.abstract import STOCH as KD, MACD, CCI, SMA, WILLR, RSI, ADOSC
-import numpy as np
+
+from ..config import DEFAULT_THRESHOLD, DEFAULT_N1, DEFAULT_N2, DEFAULT_N3
 
 class NEATStrategyBase(Strategy):
-    n1 = 5
-    n2 = 12
-    n3 = 26
+    """
+    Base trading strategy class that integrates NEAT neural networks.
+    
+    This class provides the foundation for NEAT-based trading strategies,
+    handling technical indicators and neural network decision making.
+    
+    Attributes:
+        n1, n2, n3: Technical indicator parameters
+        model: NEAT neural network model
+        threshold: Decision threshold for buy/sell signals
+    """
+    n1 = DEFAULT_N1
+    n2 = DEFAULT_N2
+    n3 = DEFAULT_N3
 
-    model = None
-    threshold = 0.5
+    model: Optional[Any] = None
+    threshold: float = DEFAULT_THRESHOLD
 
-    def init(self):
+    def init(self) -> None:
+        """
+        Initialize technical indicators for the strategy.
+        
+        Sets up all required technical indicators including:
+        - Stochastic Oscillator (KD)
+        - MACD
+        - Commodity Channel Index (CCI)
+        - Simple Moving Averages (SMA)
+        - Williams %R
+        - Relative Strength Index (RSI)
+        - Accumulation/Distribution Oscillator (ADOSC)
+        """
         self.kd = self.I(KD, self.data.High, self.data.Low, self.data.Close, name='KD')
         self.macd = self.I(MACD, self.data.Close, name='MACD')
         self.cci = self.I(CCI, self.data.High, self.data.Low, self.data.Close, name='CCI')
@@ -23,7 +56,19 @@ class NEATStrategyBase(Strategy):
                             np.array(self.data.Close, dtype=float), 
                             np.array(self.data.Volume, dtype=float), name='ADOSC')
 
-    def next(self):
+    def next(self) -> None:
+        """
+        Execute trading logic for each time step.
+        
+        This method is called for each bar in the backtest and:
+        1. Preprocesses market data into input features
+        2. Activates the NEAT neural network model
+        3. Makes trading decisions based on model output
+        4. Executes buy/sell orders
+        """
+        if self.model is None:
+            return
+            
         # Preprocess the data to get the input features for the model
         input_data = self.data_preprocessed()
         
@@ -31,7 +76,7 @@ class NEATStrategyBase(Strategy):
         buy, sell, vol = self.model.activate(input_data)
         
         # Determine the action to take based on the buy and sell signals
-        action = None
+        action: Optional[int] = None
         if buy > self.threshold and sell > self.threshold:
             action = np.argmax([buy, sell])  # Choose the stronger signal
         elif buy > self.threshold:
@@ -40,15 +85,32 @@ class NEATStrategyBase(Strategy):
             action = 1  # Sell signal
 
         # Calculate the volume to trade based on the equity and current price
-        vol = int(self.equity * vol / self.data.df.Close.iloc[-1])
+        vol_size = int(self.equity * vol / self.data.df.Close.iloc[-1])
 
         # Execute the trade based on the determined action
-        if action == 0 and vol > 0:
-            self.buy(size=vol)
-        elif action == 1 and vol > 0:
-            self.sell(size=vol)
+        if action == 0 and vol_size > 0:
+            self.buy(size=vol_size)
+        elif action == 1 and vol_size > 0:
+            self.sell(size=vol_size)
 
-    def data_preprocessed(self):
+    def data_preprocessed(self) -> Tuple[float, ...]:
+        """
+        Preprocess market data into input features for the NEAT model.
+        
+        Returns:
+            Tuple of 11 input features:
+            - long_position: Current long position size
+            - short_position: Current short position size  
+            - sma5_ratio: Price to SMA5 ratio
+            - sma10_ratio: Price to SMA10 ratio
+            - slowk: Stochastic %K value
+            - slowd: Stochastic %D value
+            - macdhist_diff: MACD histogram difference
+            - cci: Commodity Channel Index
+            - willr: Williams %R
+            - rsi: Relative Strength Index
+            - adosc: Accumulation/Distribution Oscillator
+        """
         data = self.data.df
         price = data.Close.iloc[-1]
         length = len(data)
@@ -65,7 +127,7 @@ class NEATStrategyBase(Strategy):
             'price_sma10': price / self.sma10[:length] - 1
         }
         
-        long_position, short_position = 0, 0
+        long_position, short_position = 0.0, 0.0
         if self.position:
             position_size = self.position.size * price / self.equity
             if self.position.is_long:
