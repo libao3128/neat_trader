@@ -9,7 +9,7 @@ backtesting>=0.3.3
 yfinance>=0.1.87
 
 # Data Handling and Database
-sqlite3
+# sqlite3 is built-in to Python, no need to install
 
 # Visualization and Plotting
 matplotlib>=3.5.0
