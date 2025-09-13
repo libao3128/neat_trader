@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![NEAT-Python](https://img.shields.io/badge/NEAT-python--neat-green.svg)](https://github.com/CodeReclaimers/neat-python)
 
-A sophisticated Python package implementing **NEAT (NeuroEvolution of Augmenting Topologies)** algorithm for automated stock trading strategies using multiple technical indicators. This project combines evolutionary computation with financial markets to evolve neural network-based trading strategies.
+This Python package leverages the **NEAT (NeuroEvolution of Augmenting Topologies)** algorithm to develop automated stock trading strategies using a variety of technical indicators. By integrating evolutionary computation with financial market data, it evolves neural network-based trading strategies. This repository supports the paper "NEAT Algorithm-based Stock Trading Strategy with Multiple Technical Indicators Resonance" [available here](https://arxiv.org/abs/2501.14736).
 
 ## 🚀 Features
 
